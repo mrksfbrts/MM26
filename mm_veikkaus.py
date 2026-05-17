@@ -614,35 +614,38 @@ if page == "Omat veikkaukset":
 # ====================== KAIKKIEN VEIKKAUKSET ======================
 if page == "Kaikkien veikkaukset":
     st.subheader("Kaikkien veikkaukset")
-    st.caption("Näkyvissä vain ne ottelut, joihin admin on syöttänyt tuloksen")
+    st.caption("Vain lukitut ottelut pitäisi näkyä tässä")
     
     locked_matches = real_results.get("matches", {})
     
-    st.info(f"Lukittuja otteluita yhteensä: **{len(locked_matches)}**")  # debug-rivi
+    st.info(f"**Debug-tieto:** Lukittuja otteluita yhteensä = **{len(locked_matches)}**")
     
-    if not locked_matches:
-        st.warning("Admin ei ole vielä syöttänyt tuloksia yhteenkään otteluun.")
-    else:
-        shown = 0
-        for m in matches:
-            match_id = str(m['id'])
-            real = locked_matches.get(match_id)
-            
-            if real:   # Vain lukitut ottelut näytetään
-                shown += 1
-                st.markdown(f"**{m['home']} — {m['away']}** ({m.get('group', '')})")
-                st.markdown(f"**Toteutunut tulos:** {real[0]}–{real[1]}")
-                
-                for u in users.keys():
-                    pred = predictions.get(u, {}).get(match_id)
-                    if pred:
-                        pts = calculate_match_points(pred, real)
-                        st.markdown(f"**{u}**: {pred[0]}–{pred[1]} <span style='color:#00ff9d'>(+{pts} pistettä)</span>", unsafe_allow_html=True)
-                
-                st.divider()
+    if len(locked_matches) == 0:
+        st.warning("Admin ei ole vielä syöttänyt yhtään tulosta. Tässä ei pitäisi näkyä yhtään veikkausta.")
+        st.stop()
+    
+    shown = 0
+    for m in matches:
+        match_id = str(m['id'])
+        real = locked_matches.get(match_id)
         
-        if shown == 0:
-            st.info("Ei vielä yhtään lukittua ottelua näytettäväksi.")
+        if real is None:
+            continue  # Ohitetaan lukitsemattomat ottelut
+        
+        shown += 1
+        st.markdown(f"### {m['home']} — {m['away']} ({m.get('group', '')})")
+        st.success(f"Toteutunut tulos: **{real[0]}–{real[1]}**")
+        
+        for u in sorted(users.keys()):
+            pred = predictions.get(u, {}).get(match_id)
+            if pred:
+                pts = calculate_match_points(pred, real)
+                st.markdown(f"**{u}**: {pred[0]}–{pred[1]} <span style='color:#00ff9d'>(+{pts} pistettä)</span>", unsafe_allow_html=True)
+        
+        st.divider()
+    
+    if shown == 0:
+        st.info("Ei vielä yhtään lukittua ottelua.")
 
 # ====================== ADMIN ======================
 if page == "Admin":
