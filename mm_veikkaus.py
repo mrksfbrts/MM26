@@ -5,48 +5,67 @@ import hashlib
 import os
 from datetime import datetime, timedelta
 
-st.set_page_config(page_title="MM 2026 Veikkaus", layout="wide", page_icon="⚽")
+st.set_page_config(page_title="MM 2026 Veikkaus", layout="wide", page_icon="🏆")
 
 st.markdown("""
     <style>
         .stApp { background-color: #0a0f1c; color: #e0e0e0; }
-        h1 { color: #00ff9d; font-size: 2.8rem; font-weight: 700; }
-        h2, h3 { color: #00cc77; }
-        .stButton>button { 
-            background-color: #00cc77; 
-            color: black; 
-            border-radius: 12px; 
-            height: 52px; 
-            font-weight: bold;
-            width: 100%;
+        
+        /* Etusivun tyylit */
+        .etusivu_text { 
+            text-align: center; 
+            font-size: 5.5rem; 
+            font-weight: 00; 
+            color: #00ff9d; 
+            text-shadow: 0 0 40px rgba(0, 255, 157, 0.7);
+            margin: 80px 0 20px 0;
         }
-        .stButton>button:hover { background-color: #00ff9d; }
-        .prediction-box {
-            background-color: #1e3a2f;
-            padding: 10px 14px;
-            border-radius: 8px;
-            display: inline-block;
-            margin: 6px 0;
-            font-weight: bold;
+        .welcome_text { 
+            text-align: center; 
+            font-size: 5.5rem; 
+            font-weight: 900; 
+            color: #ffffff; 
+            margin-bottom: 60px;
         }
-        .result-box {
-            background-color: #3a2f1e;
-            padding: 10px 14px;
-            border-radius: 8px;
-            display: inline-block;
-            margin: 6px 0;
-            font-weight: bold;
-        }
-        div[data-baseweb="input"] {
-            max-width: 420px !important;
-        }
-        .etusivu_text {
+        
+        /* Omat veikkaukset -tyylit */
+        .pred-box { 
+            background-color: #3a1f1f; 
+            color: #ff8888;
+            padding: 12px 20px; 
+            border-radius: 8px; 
+            font-weight: 600;
+            font-size: 1.1rem;
+            width: 160px;
             text-align: center;
-            font-size: 5.2rem;
-            font-weight: 800;
-            color: #00ff9d;
-            margin-top: 160px;
-            text-shadow: 0 0 30px rgba(0, 255, 157, 0.5);
+            margin: 3px 0;
+        }
+        .result-box { 
+            background-color: #1f3a2a; 
+            color: #88ffaa;
+            padding: 12px 20px; 
+            border-radius: 8px; 
+            font-weight: 600;
+            font-size: 1.1rem;
+            width: 160px;
+            text-align: center;
+            margin: 3px 0;
+        }
+        .points-box { 
+            background-color: #2a2a4a; 
+            color: #ffff88;
+            padding: 18px 24px; 
+            border-radius: 50px; 
+            font-weight: 700;
+            font-size: 1.4rem;
+            text-align: center;
+            width: 85px;
+            height: 85px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 15px rgba(255, 255, 136, 0.5);
+            margin-top: 20px;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -83,114 +102,140 @@ real_results = load_json(RESULTS_FILE, {})
 if "logged_in_user" not in st.session_state:
     st.session_state.logged_in_user = None
 
-# ====================== 48 OTTELUA ======================
+# ====================== MAAT ======================
+countries = sorted([
+    "Algeria", "Argentiina", "Australia", "Belgia", "Bosnia ja Hertsegovina", "Brasilia",
+    "Chile", "Curaçao", "Ecuador", "Egypti", "Englanti", "Espanja", "Etelä-Afrikka",
+    "Etelä-Korea", "Ghana", "Haiti", "Iran", "Irak", "Italia", "Itävalta", "Japani",
+    "Jordania", "Kanada", "Kolumbia", "Kroatia", "Marokko", "Meksiko", "Nigeria",
+    "Norja", "Norsunluurannikko", "Panama", "Paraguay", "Portugali", "Qatar", "Ranska",
+    "Ruotsi", "Saksa", "Saudi-Arabia", "Senegal", "Skotlanti", "Sveitsi", "Tanska",
+    "Tunisia", "Turkki", "Tšekki", "Uruguay", "USA", "Uusi-Seelanti", "Uzbekistan"
+])
+
+# ====================== 72 OTTELUA - YLEN MUKAAN ======================
 matches = [
-    {"id": 1, "date": "2026-06-11", "time": "03:00", "home": "Meksiko", "away": "Etelä-Afrikka", "group": "A"},
-    {"id": 2, "date": "2026-06-11", "time": "20:00", "home": "Etelä-Korea", "away": "Tšekki", "group": "A"},
-    {"id": 3, "date": "2026-06-12", "time": "03:00", "home": "Kanada", "away": "Bosnia ja Hertsegovina", "group": "B"},
-    {"id": 4, "date": "2026-06-12", "time": "20:00", "home": "Brasilia", "away": "Marokko", "group": "B"},
-    {"id": 5, "date": "2026-06-13", "time": "03:00", "home": "USA", "away": "Paraguay", "group": "C"},
-    {"id": 6, "date": "2026-06-13", "time": "20:00", "home": "Argentiina", "away": "Chile", "group": "C"},
-    {"id": 7, "date": "2026-06-14", "time": "03:00", "home": "Ranska", "away": "Australia", "group": "D"},
-    {"id": 8, "date": "2026-06-14", "time": "20:00", "home": "Englanti", "away": "Iran", "group": "D"},
-    {"id": 9, "date": "2026-06-15", "time": "03:00", "home": "Espanja", "away": "Nigeria", "group": "E"},
-    {"id": 10, "date": "2026-06-15", "time": "20:00", "home": "Portugali", "away": "Ghana", "group": "E"},
-    {"id": 11, "date": "2026-06-16", "time": "03:00", "home": "Saksa", "away": "Japani", "group": "F"},
-    {"id": 12, "date": "2026-06-16", "time": "20:00", "home": "Uruguay", "away": "Italia", "group": "F"},
-    {"id": 13, "date": "2026-06-17", "time": "03:00", "home": "Alankomaat", "away": "Saudi-Arabia", "group": "G"},
-    {"id": 14, "date": "2026-06-17", "time": "20:00", "home": "Tanska", "away": "Senegal", "group": "G"},
-    {"id": 15, "date": "2026-06-18", "time": "03:00", "home": "Belgia", "away": "Panama", "group": "H"},
-    {"id": 16, "date": "2026-06-18", "time": "20:00", "home": "Kroatia", "away": "Kolumbia", "group": "H"},
-    {"id": 17, "date": "2026-06-19", "time": "03:00", "home": "Meksiko", "away": "Etelä-Korea", "group": "A"},
-    {"id": 18, "date": "2026-06-19", "time": "20:00", "home": "Tšekki", "away": "Etelä-Afrikka", "group": "A"},
-    {"id": 19, "date": "2026-06-20", "time": "03:00", "home": "Kanada", "away": "Brasilia", "group": "B"},
-    {"id": 20, "date": "2026-06-20", "time": "20:00", "home": "Marokko", "away": "Bosnia ja Hertsegovina", "group": "B"},
-    {"id": 21, "date": "2026-06-21", "time": "03:00", "home": "USA", "away": "Argentiina", "group": "C"},
-    {"id": 22, "date": "2026-06-21", "time": "20:00", "home": "Chile", "away": "Paraguay", "group": "C"},
-    {"id": 23, "date": "2026-06-22", "time": "03:00", "home": "Ranska", "away": "Englanti", "group": "D"},
-    {"id": 24, "date": "2026-06-22", "time": "20:00", "home": "Iran", "away": "Australia", "group": "D"},
-    {"id": 25, "date": "2026-06-23", "time": "03:00", "home": "Espanja", "away": "Portugali", "group": "E"},
-    {"id": 26, "date": "2026-06-23", "time": "20:00", "home": "Ghana", "away": "Nigeria", "group": "E"},
-    {"id": 27, "date": "2026-06-24", "time": "03:00", "home": "Saksa", "away": "Uruguay", "group": "F"},
-    {"id": 28, "date": "2026-06-24", "time": "20:00", "home": "Italia", "away": "Japani", "group": "F"},
-    {"id": 29, "date": "2026-06-25", "time": "03:00", "home": "Alankomaat", "away": "Tanska", "group": "G"},
-    {"id": 30, "date": "2026-06-25", "time": "20:00", "home": "Senegal", "away": "Saudi-Arabia", "group": "G"},
-    {"id": 31, "date": "2026-06-26", "time": "03:00", "home": "Belgia", "away": "Kroatia", "group": "H"},
-    {"id": 32, "date": "2026-06-26", "time": "20:00", "home": "Kolumbia", "away": "Panama", "group": "H"},
-    {"id": 33, "date": "2026-06-27", "time": "03:00", "home": "Etelä-Afrikka", "away": "Etelä-Korea", "group": "A"},
-    {"id": 34, "date": "2026-06-27", "time": "20:00", "home": "Meksiko", "away": "Tšekki", "group": "A"},
-    {"id": 35, "date": "2026-06-28", "time": "03:00", "home": "Bosnia ja Hertsegovina", "away": "Brasilia", "group": "B"},
-    {"id": 36, "date": "2026-06-28", "time": "20:00", "home": "Kanada", "away": "Marokko", "group": "B"},
-    {"id": 37, "date": "2026-06-29", "time": "03:00", "home": "Paraguay", "away": "Argentiina", "group": "C"},
-    {"id": 38, "date": "2026-06-29", "time": "20:00", "home": "USA", "away": "Chile", "group": "C"},
-    {"id": 39, "date": "2026-06-30", "time": "03:00", "home": "Australia", "away": "Englanti", "group": "D"},
-    {"id": 40, "date": "2026-06-30", "time": "20:00", "home": "Ranska", "away": "Iran", "group": "D"},
-    {"id": 41, "date": "2026-07-01", "time": "03:00", "home": "Nigeria", "away": "Portugali", "group": "E"},
-    {"id": 42, "date": "2026-07-01", "time": "20:00", "home": "Espanja", "away": "Ghana", "group": "E"},
-    {"id": 43, "date": "2026-07-02", "time": "03:00", "home": "Japani", "away": "Uruguay", "group": "F"},
-    {"id": 44, "date": "2026-07-02", "time": "20:00", "home": "Saksa", "away": "Italia", "group": "F"},
-    {"id": 45, "date": "2026-07-03", "time": "03:00", "home": "Saudi-Arabia", "away": "Tanska", "group": "G"},
-    {"id": 46, "date": "2026-07-03", "time": "20:00", "home": "Alankomaat", "away": "Senegal", "group": "G"},
-    {"id": 47, "date": "2026-07-04", "time": "03:00", "home": "Panama", "away": "Kroatia", "group": "H"},
-    {"id": 48, "date": "2026-07-04", "time": "20:00", "home": "Belgia", "away": "Kolumbia", "group": "H"},
+    {"id":1, "date":"2026-06-11", "time":"22:00", "home":"Meksiko", "away":"Etelä-Afrikka", "group":"A"},
+    {"id":2, "date":"2026-06-12", "time":"05:00", "home":"Etelä-Korea", "away":"Tšekki", "group":"A"},
+    {"id":3, "date":"2026-06-12", "time":"22:00", "home":"Kanada", "away":"Bosnia ja Hertsegovina", "group":"B"},
+    {"id":4, "date":"2026-06-13", "time":"04:00", "home":"USA", "away":"Paraguay", "group":"D"},
+    {"id":5, "date":"2026-06-13", "time":"22:00", "home":"Qatar", "away":"Sveitsi", "group":"B"},
+    {"id":6, "date":"2026-06-14", "time":"01:00", "home":"Brasilia", "away":"Marokko", "group":"C"},
+    {"id":7, "date":"2026-06-14", "time":"04:00", "home":"Haiti", "away":"Skotlanti", "group":"C"},
+    {"id":8, "date":"2026-06-14", "time":"07:00", "home":"Australia", "away":"Turkki", "group":"D"},
+    {"id":9, "date":"2026-06-14", "time":"20:00", "home":"Saksa", "away":"Curaçao", "group":"E"},
+    {"id":10,"date":"2026-06-14", "time":"23:00", "home":"Hollanti", "away":"Japani", "group":"F"},
+    {"id":11,"date":"2026-06-15", "time":"02:00", "home":"Norsunluurannikko", "away":"Ecuador", "group":"E"},
+    {"id":12,"date":"2026-06-15", "time":"05:00", "home":"Ruotsi", "away":"Tunisia", "group":"F"},
+    {"id":13,"date":"2026-06-15", "time":"19:00", "home":"Espanja", "away":"Kap Verde", "group":"H"},
+    {"id":14,"date":"2026-06-15", "time":"22:00", "home":"Belgia", "away":"Egypti", "group":"G"},
+    {"id":15,"date":"2026-06-16", "time":"01:00", "home":"Saudi-Arabia", "away":"Uruguay", "group":"H"},
+    {"id":16,"date":"2026-06-16", "time":"04:00", "home":"Iran", "away":"Uusi-Seelanti", "group":"G"},
+    {"id":17,"date":"2026-06-16", "time":"22:00", "home":"Ranska", "away":"Senegal", "group":"I"},
+    {"id":18,"date":"2026-06-17", "time":"01:00", "home":"Irak", "away":"Norja", "group":"I"},
+    {"id":19,"date":"2026-06-17", "time":"04:00", "home":"Argentiina", "away":"Algeria", "group":"J"},
+    {"id":20,"date":"2026-06-17", "time":"07:00", "home":"Itävalta", "away":"Jordania", "group":"J"},
+    {"id":21,"date":"2026-06-17", "time":"20:00", "home":"Portugali", "away":"Kongon demokraattinen tasavalta", "group":"K"},
+    {"id":22,"date":"2026-06-17", "time":"23:00", "home":"Englanti", "away":"Kroatia", "group":"L"},
+    {"id":23,"date":"2026-06-18", "time":"02:00", "home":"Ghana", "away":"Panama", "group":"L"},
+    {"id":24,"date":"2026-06-18", "time":"05:00", "home":"Uzbekistan", "away":"Kolumbia", "group":"K"},
+    {"id":25,"date":"2026-06-18", "time":"19:00", "home":"Tšekki", "away":"Etelä-Afrikka", "group":"A"},
+    {"id":26,"date":"2026-06-18", "time":"22:00", "home":"Sveitsi", "away":"Bosnia ja Hertsegovina", "group":"B"},
+    {"id":27,"date":"2026-06-19", "time":"01:00", "home":"Kanada", "away":"Qatar", "group":"B"},
+    {"id":28,"date":"2026-06-19", "time":"04:00", "home":"Meksiko", "away":"Etelä-Korea", "group":"A"},
+    {"id":29,"date":"2026-06-19", "time":"22:00", "home":"USA", "away":"Australia", "group":"D"},
+    {"id":30,"date":"2026-06-20", "time":"01:00", "home":"Skotlanti", "away":"Marokko", "group":"C"},
+    {"id":31,"date":"2026-06-20", "time":"04:00", "home":"Brasilia", "away":"Haiti", "group":"C"},
+    {"id":32,"date":"2026-06-20", "time":"07:00", "home":"Turkki", "away":"Paraguay", "group":"D"},
+    {"id":33,"date":"2026-06-20", "time":"20:00", "home":"Hollanti", "away":"Ruotsi", "group":"F"},
+    {"id":34,"date":"2026-06-20", "time":"23:00", "home":"Saksa", "away":"Norsunluurannikko", "group":"E"},
+    {"id":35,"date":"2026-06-21", "time":"03:00", "home":"Ecuador", "away":"Curaçao", "group":"E"},
+    {"id":36,"date":"2026-06-21", "time":"07:00", "home":"Tunisia", "away":"Japani", "group":"F"},
+    {"id":37,"date":"2026-06-21", "time":"19:00", "home":"Espanja", "away":"Saudi-Arabia", "group":"H"},
+    {"id":38,"date":"2026-06-21", "time":"22:00", "home":"Belgia", "away":"Iran", "group":"G"},
+    {"id":39,"date":"2026-06-22", "time":"01:00", "home":"Uruguay", "away":"Kap Verde", "group":"H"},
+    {"id":40,"date":"2026-06-22", "time":"04:00", "home":"Uusi-Seelanti", "away":"Egypti", "group":"G"},
+    {"id":41,"date":"2026-06-22", "time":"20:00", "home":"Argentiina", "away":"Itävalta", "group":"J"},
+    {"id":42,"date":"2026-06-23", "time":"00:00", "home":"Ranska", "away":"Irak", "group":"I"},
+    {"id":43,"date":"2026-06-23", "time":"03:00", "home":"Norja", "away":"Senegal", "group":"I"},
+    {"id":44,"date":"2026-06-23", "time":"06:00", "home":"Jordania", "away":"Algeria", "group":"J"},
+    {"id":45,"date":"2026-06-23", "time":"20:00", "home":"Portugali", "away":"Uzbekistan", "group":"K"},
+    {"id":46,"date":"2026-06-23", "time":"23:00", "home":"Englanti", "away":"Ghana", "group":"L"},
+    {"id":47,"date":"2026-06-24", "time":"02:00", "home":"Panama", "away":"Kroatia", "group":"L"},
+    {"id":48,"date":"2026-06-24", "time":"05:00", "home":"Kolumbia", "away":"Kongon demokraattinen tasavalta", "group":"K"},
+    {"id":49,"date":"2026-06-24", "time":"22:00", "home":"Sveitsi", "away":"Kanada", "group":"B"},
+    {"id":50,"date":"2026-06-24", "time":"22:00", "home":"Bosnia ja Hertsegovina", "away":"Qatar", "group":"B"},
+    {"id":51,"date":"2026-06-25", "time":"01:00", "home":"Skotlanti", "away":"Brasilia", "group":"C"},
+    {"id":52,"date":"2026-06-25", "time":"01:00", "home":"Marokko", "away":"Haiti", "group":"C"},
+    {"id":53,"date":"2026-06-25", "time":"04:00", "home":"Tšekki", "away":"Meksiko", "group":"A"},
+    {"id":54,"date":"2026-06-25", "time":"04:00", "home":"Etelä-Afrikka", "away":"Etelä-Korea", "group":"A"},
+    {"id":55,"date":"2026-06-25", "time":"23:00", "home":"Curaçao", "away":"Norsunluurannikko", "group":"E"},
+    {"id":56,"date":"2026-06-25", "time":"23:00", "home":"Ecuador", "away":"Saksa", "group":"E"},
+    {"id":57,"date":"2026-06-26", "time":"02:00", "home":"Japani", "away":"Ruotsi", "group":"F"},
+    {"id":58,"date":"2026-06-26", "time":"02:00", "home":"Tunisia", "away":"Hollanti", "group":"F"},
+    {"id":59,"date":"2026-06-26", "time":"05:00", "home":"Turkki", "away":"USA", "group":"D"},
+    {"id":60,"date":"2026-06-26", "time":"05:00", "home":"Paraguay", "away":"Australia", "group":"D"},
+    {"id":61,"date":"2026-06-26", "time":"22:00", "home":"Norja", "away":"Ranska", "group":"I"},
+    {"id":62,"date":"2026-06-26", "time":"22:00", "home":"Senegal", "away":"Irak", "group":"I"},
+    {"id":63,"date":"2026-06-27", "time":"03:00", "home":"Kap Verde", "away":"Saudi-Arabia", "group":"H"},
+    {"id":64,"date":"2026-06-27", "time":"03:00", "home":"Uruguay", "away":"Espanja", "group":"H"},
+    {"id":65,"date":"2026-06-27", "time":"06:00", "home":"Egypti", "away":"Iran", "group":"G"},
+    {"id":66,"date":"2026-06-27", "time":"06:00", "home":"Uusi-Seelanti", "away":"Belgia", "group":"G"},
+    {"id":67,"date":"2026-06-28", "time":"00:00", "home":"Panama", "away":"Englanti", "group":"L"},
+    {"id":68,"date":"2026-06-28", "time":"00:00", "home":"Kroatia", "away":"Ghana", "group":"L"},
+    {"id":69,"date":"2026-06-28", "time":"02:30", "home":"Kolumbia", "away":"Portugali", "group":"K"},
+    {"id":70,"date":"2026-06-28", "time":"02:30", "home":"Kongon demokraattinen tasavalta", "away":"Uzbekistan", "group":"K"},
+    {"id":71,"date":"2026-06-28", "time":"05:00", "home":"Algeria", "away":"Itävalta", "group":"J"},
+    {"id":72,"date":"2026-06-28", "time":"05:00", "home":"Jordania", "away":"Argentiina", "group":"J"}
 ]
 
+# ====================== ERIKOISKOHTEET ======================
+special_bets = [
+    {"id": "most_goals", "name": "1. Mikä maa tekee alkulohkoissa eniten maaleja?", "points": 6, "type": "select"},
+    {"id": "most_cards", "name": "2. Mikä maa saa alkulohkoissa eniten varoituksia?", "points": 6, "type": "select"},
+    {"id": "top_scorer", "name": "3. Paras maalintekijä", "points": 6, "type": "text"},
+    {"id": "top_scorer_goals", "name": "4. Millä maalimäärällä voitetaan maalintekijäkuninkuus?", "points": 6, "type": "number"},
+    {"id": "champion", "name": "5. Maailmanmestari", "points": 6, "type": "select"},
+]
+
+for letter in "ABCDEFGHIJKL":
+    special_bets.append({"id": f"group_{letter.lower()}", "name": f"Lohko {letter} voittaja", "points": 6, "type": "select"})
+
+# ====================== FUNKTIOT ======================
 def get_countdown(match):
-    match_time = datetime.strptime(f"{match['date']} {match['time']}", "%Y-%m-%d %H:%M")
-    lock_time = match_time - timedelta(minutes=15)
-    time_left = lock_time - datetime.now()
-    if time_left.total_seconds() <= 0:
-        return "🔴 Lukittu", False
-    hours, rem = divmod(int(time_left.total_seconds()), 3600)
-    minutes, _ = divmod(rem, 60)
-    return f"⏳ {hours}t {minutes:02d}min jäljellä", True
+    try:
+        match_time = datetime.strptime(f"{match['date']} {match['time']}", "%Y-%m-%d %H:%M")
+        lock_time = match_time - timedelta(minutes=15)
+        time_left = lock_time - datetime.now()
+        if time_left.total_seconds() <= 0:
+            return "🔴 Lukittu", False
+        hours, rem = divmod(int(time_left.total_seconds()), 3600)
+        minutes, _ = divmod(rem, 60)
+        return f"⏳ {hours}t {minutes:02d}min jäljellä", True
+    except:
+        return "Virhe", False
 
 def get_special_bets_countdown():
-    first_match = matches[0]
-    match_time = datetime.strptime(f"{first_match['date']} {first_match['time']}", "%Y-%m-%d %H:%M")
-    lock_time = match_time - timedelta(minutes=15)
-    time_left = lock_time - datetime.now()
-    if time_left.total_seconds() <= 0:
-        return "🔴 Erikoiskohteet sulkeutuneet", False
-    hours, rem = divmod(int(time_left.total_seconds()), 3600)
-    minutes, _ = divmod(rem, 60)
-    return f"⏳ {hours}t {minutes:02d}min jäljellä", True
-
-special_bets = [
-    {"id": "most_goals", "name": "1. Mikä maa tekee alkulohkoissa eniten maaleja?", "points": 8},
-    {"id": "most_cards", "name": "2. Mikä maa saa alkulohkoissa eniten varoituksia?", "points": 8},
-    {"id": "group_a", "name": "3a. Lohko A voittaja", "points": 5},
-    {"id": "group_b", "name": "3b. Lohko B voittaja", "points": 5},
-    {"id": "group_c", "name": "3c. Lohko C voittaja", "points": 5},
-    {"id": "group_d", "name": "3d. Lohko D voittaja", "points": 5},
-    {"id": "group_e", "name": "3e. Lohko E voittaja", "points": 5},
-    {"id": "group_f", "name": "3f. Lohko F voittaja", "points": 5},
-    {"id": "group_g", "name": "3g. Lohko G voittaja", "points": 5},
-    {"id": "group_h", "name": "3h. Lohko H voittaja", "points": 5},
-    {"id": "top_scorer", "name": "4. Paras maalintekijä", "points": 12},
-    {"id": "top_scorer_goals", "name": "5. Millä maalimäärällä voitetaan maalintekijäkuninkuus?", "points": 5},
-    {"id": "champion", "name": "6. Maailmanmestari", "points": 12},
-]
+    return get_countdown(matches[0]) if matches else ("", False)
 
 def calculate_match_points(pred, real):
     if not pred or not real:
         return 0
-    p_home, p_away = pred
-    r_home, r_away = real
-    if p_home == r_home and p_away == r_away:
+    ph, pa = pred
+    rh, ra = real
+    if ph == rh and pa == ra:
         return 8
-    if p_home == p_away and r_home == r_away:
-        return 8 if p_home == r_home and p_away == r_away else 5
-    p_winner = 1 if p_home > p_away else 2 if p_away > p_home else 0
-    r_winner = 1 if r_home > r_away else 2 if r_away > r_home else 0
-    if p_winner == r_winner and p_winner != 0:
-        if (p_home == r_home) or (p_away == r_away):
+    if ph == pa and rh == ra:
+        return 5
+    p_win = 1 if ph > pa else 2 if pa > ph else 0
+    r_win = 1 if rh > ra else 2 if ra > rh else 0
+    if p_win == r_win and p_win != 0:
+        if ph == rh or pa == ra:
             return 5
-        else:
-            return 3
+        return 3
     return 0
 
-# ====================== SIDEBAR ======================
+# ====================== NAVIGOINTI ======================
 if st.session_state.logged_in_user:
     st.sidebar.success(f"👤 {st.session_state.logged_in_user}")
     if st.sidebar.button("Kirjaudu ulos"):
@@ -198,50 +243,103 @@ if st.session_state.logged_in_user:
         st.rerun()
 
 page = st.sidebar.radio("Valikko", [
-    "Etusivu",
-    "Kirjaudu / Rekisteröidy",
-    "VEIKKAA OTTELUITA",
-    "VEIKKAA ERIKOISKOHTEITA",
-    "Veikkaustilanne",
-    "Omat veikkaukset",
-    "Kaikkien veikkaukset",
-    "Admin"
+    "Etusivu", "Kirjaudu / Rekisteröidy", "VEIKKAA OTTELUITA", 
+    "VEIKKAA ERIKOISKOHTEITA", "Veikkaustilanne", "Omat veikkaukset", 
+    "Kaikkien veikkaukset", "Admin"
 ])
 
 # ====================== ETUSIVU ======================
 if page == "Etusivu":
-    st.markdown('<div class="etusivu_text">MM26 - Veikkauskisa</div>', unsafe_allow_html=True)
+    # Taustatyylit
+    st.markdown("""
+        <style>
+            .etusivu_text { 
+                text-align: center; 
+                font-size: 7.2rem; 
+                font-weight: 900; 
+                color: #00ff9d; 
+                text-shadow: 0 0 50px rgba(0, 255, 157, 0.8);
+                margin: 80px 0 30px 0;
+                position: relative;
+                z-index: 2;
+            }
+            .welcome_text { 
+                text-align: center; 
+                font-size: 5.7rem; 
+                font-weight: 700; 
+                color: #e0e0e0; 
+                margin-bottom: 100px;
+                position: relative;
+                z-index: 2;
+            }
+            .background-countries {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+                z-index: 0;
+                opacity: 0.08;
+                color: #ffffff;
+                font-size: 1.15rem;
+                line-height: 1.8;
+                pointer-events: none;
+                user-select: none;
+            }
+        </style>
+    """, unsafe_allow_html=True)
 
-# ====================== KIRJAUTUMINEN ======================
+   
+
+    # Varsinainen sisältö
+    st.markdown('<div class="etusivu_text">MM26</div>', unsafe_allow_html=True)
+    st.markdown('<p class="welcome_text">Tervetuloa veikkaamaan ja onnea matkaan!</p>', unsafe_allow_html=True)
+
+# ====================== KIRJAUDU / REKISTERÖIDY ======================
 if page == "Kirjaudu / Rekisteröidy":
-    tab1, tab2 = st.tabs(["Kirjaudu sisään", "Luo uusi käyttäjä"])
-    with tab1:
-        st.subheader("Kirjaudu sisään")
-        username = st.text_input("Käyttäjänimi", key="login_username")
-        password = st.text_input("Salasana", type="password", key="login_password")
-        if st.button("Kirjaudu sisään", key="login_btn"):
-            if username in users and users[username].get("password") == hash_password(password):
-                st.session_state.logged_in_user = username
-                st.success(f"Tervetuloa, {username}!")
-                st.rerun()
-            else:
-                st.error("Väärä käyttäjänimi tai salasana")
-    with tab2:
-        st.subheader("Luo uusi käyttäjä")
-        new_user = st.text_input("Käyttäjänimi", key="reg_username")
-        new_pass = st.text_input("Salasana", type="password", key="reg_password")
-        new_pass2 = st.text_input("Toista salasana", type="password", key="reg_password2")
-        if st.button("Rekisteröidy", key="reg_btn"):
-            if not new_user or not new_pass:
-                st.error("Käyttäjänimi ja salasana ovat pakollisia")
-            elif new_user in users:
-                st.error("Käyttäjänimi on jo käytössä")
-            elif new_pass != new_pass2:
-                st.error("Salasanat eivät täsmää")
-            else:
-                users[new_user] = {"password": hash_password(new_pass), "created": str(datetime.now())}
-                save_json(USERS_FILE, users)
-                st.success(f"Käyttäjä **{new_user}** luotu!")
+    if st.session_state.logged_in_user:
+        st.success(f"Olet kirjautuneena nimellä: **{st.session_state.logged_in_user}**")
+        if st.button("Kirjaudu ulos"):
+            st.session_state.logged_in_user = None
+            st.rerun()
+    else:
+        tab1, tab2 = st.tabs(["Kirjaudu sisään", "Luo uusi tunnus"])
+        
+        with tab1:  # Kirjautuminen
+            st.subheader("Kirjaudu sisään")
+            col = st.columns([1, 2, 1])[1]
+            with col:
+                username = st.text_input("Käyttäjänimi", key="login_user")
+                password = st.text_input("Salasana", type="password", key="login_pass")
+                
+                if st.button("Kirjaudu sisään", type="primary", use_container_width=True):
+                    if username in users and users[username] == hash_password(password):
+                        st.session_state.logged_in_user = username
+                        st.success("Kirjautuminen onnistui!")
+                        st.rerun()
+                    else:
+                        st.error("Väärä käyttäjänimi tai salasana")
+        
+        with tab2:  # Rekisteröityminen
+            st.subheader("Luo uusi tunnus")
+            col = st.columns([1, 2, 1])[1]
+            with col:
+                new_user = st.text_input("Käyttäjänimi", key="reg_user")
+                new_pass = st.text_input("Salasana", type="password", key="reg_pass")
+                new_pass2 = st.text_input("Toista salasana", type="password", key="reg_pass2")
+                
+                if st.button("Rekisteröidy", type="primary", use_container_width=True):
+                    if not new_user or not new_pass:
+                        st.error("Käyttäjänimi ja salasana ovat pakollisia")
+                    elif new_pass != new_pass2:
+                        st.error("Salasanat eivät täsmää")
+                    elif new_user in users:
+                        st.error("Käyttäjänimi on jo käytössä")
+                    else:
+                        users[new_user] = hash_password(new_pass)
+                        save_json(USERS_FILE, users)
+                        st.success("Tunnus luotu onnistuneesti! Voit nyt kirjautua sisään.")
 
 # ====================== VEIKKAA OTTELUITA ======================
 if page == "VEIKKAA OTTELUITA":
@@ -249,26 +347,54 @@ if page == "VEIKKAA OTTELUITA":
         st.warning("Kirjaudu ensin sisään!")
     else:
         user = st.session_state.logged_in_user
-        st.subheader(f"Veikkaukset - {user}")
-        for m in matches:
-            countdown_text, is_open = get_countdown(m)
-            st.write(f"**{m['date']} klo {m['time']}**")
-            st.markdown(f"**{m['home']} — {m['away']}** (Lohko {m['group']})")
-            st.write(countdown_text)
-            if not is_open:
-                st.divider()
-                continue
-            col1, col2, col3, col4 = st.columns([1.5, 1.2, 1.2, 4])
-            with col2:
-                home_pred = st.number_input("Koti", min_value=0, value=0, key=f"h_{m['id']}_{user}", label_visibility="collapsed")
-            with col3:
-                away_pred = st.number_input("Vieras", min_value=0, value=0, key=f"a_{m['id']}_{user}", label_visibility="collapsed")
-            if st.button("Tallenna veikkaus", key=f"save_{m['id']}_{user}"):
-                if user not in predictions:
-                    predictions[user] = {}
-                predictions[user][str(m['id'])] = (home_pred, away_pred)
-                save_json(PREDICTIONS_FILE, predictions)
-            st.divider()
+        st.subheader(f"VEIKKAA OTTELUITA")
+        
+        tab1, tab2, tab3, tab4 = st.tabs(["Ottelut 1-18", "Ottelut 19-36", "Ottelut 37-54", "Ottelut 55-72"])
+        tabs_list = [tab1, tab2, tab3, tab4]
+        
+        for tab_idx, tab in enumerate(tabs_list):
+            with tab:
+                start = tab_idx * 18
+                end = min(start + 18, len(matches))
+                
+                for i in range(start, end):
+                    m = matches[i]
+                    match_id = str(m['id'])
+                    key = f"match_{match_id}"
+                    
+                    st.write(f"**{m['home']} — {m['away']}**  ({m.get('group', '')})")
+                    
+                    real = real_results.get("matches", {}).get(match_id)
+                    countdown = get_countdown(m)
+                    if isinstance(countdown, tuple):
+                        countdown = countdown[0]
+                    
+                    if real:
+                        st.markdown("🔒 **Kohde lukittu**", unsafe_allow_html=True)
+                    elif countdown == "Suljettu" or "Suljettu" in str(countdown):
+                        st.markdown("🔴 **Veikkaus on suljettu**", unsafe_allow_html=True)
+                    else:
+                        st.markdown(f"🟢 **{countdown}**", unsafe_allow_html=True)
+                    
+                    # Veikkauslomake (lukittu jos tulos on jo tallennettu)
+                    disabled = real is not None
+                    
+                    col_home, col_away = st.columns(2)
+                    with col_home:
+                        home_score = st.number_input("Kotimaali", min_value=0, max_value=10, value=0, 
+                                                   key=f"{key}_home", label_visibility="collapsed", disabled=disabled)
+                    with col_away:
+                        away_score = st.number_input("Vierasmaali", min_value=0, max_value=10, value=0, 
+                                                   key=f"{key}_away", label_visibility="collapsed", disabled=disabled)
+                    
+                    if st.button("TALLENNA VEIKKAUS", key=f"save_{key}", use_container_width=True, disabled=disabled):
+                        if user not in predictions:
+                            predictions[user] = {}
+                        predictions[user][match_id] = [home_score, away_score]
+                        save_json(PREDICTIONS_FILE, predictions)
+                        st.success(f"Tallennettu: {m['home']} {home_score}–{away_score} {m['away']}")
+                    
+                    st.divider()
 
 # ====================== VEIKKAA ERIKOISKOHTEITA ======================
 if page == "VEIKKAA ERIKOISKOHTEITA":
@@ -276,61 +402,133 @@ if page == "VEIKKAA ERIKOISKOHTEITA":
         st.warning("Kirjaudu ensin sisään!")
     else:
         user = st.session_state.logged_in_user
-        st.subheader(f"Veikkaa erikoiskohteita - {user}")
-        countdown_text, is_open = get_special_bets_countdown()
-        st.write(countdown_text)
-        if not is_open:
-            st.error("Erikoiskohteiden veikkaus on päättynyt, kun kisat alkoivat.")
+        st.subheader(f"VEIKKAA ERIKOISKOHTEITA")
+        
+        countdown = get_special_bets_countdown() if 'get_special_bets_countdown' in globals() else "Aika ei saatavilla"
+        if isinstance(countdown, tuple):
+            countdown = countdown[0]
+        
+        if countdown == "Suljettu" or "Suljettu" in str(countdown):
+            st.markdown("🔴 **Erikoiskohteiden veikkaus on suljettu**", unsafe_allow_html=True)
         else:
-            for bet in special_bets:
-                st.markdown(f"**{bet['name']}** ({bet['points']} pistettä)")
-                col_input, col_button = st.columns([2.8, 1.2])
-                with col_input:
-                    key = f"special_{bet['id']}_{user}"
-                    value = st.text_input("Vastaus", key=key, label_visibility="collapsed")
-                with col_button:
-                    if st.button("Tallenna", key=f"save_{bet['id']}"):
-                        if user not in predictions:
-                            predictions[user] = {}
-                        if "special" not in predictions[user]:
-                            predictions[user]["special"] = {}
-                        predictions[user]["special"][bet["id"]] = value.strip()
-                        save_json(PREDICTIONS_FILE, predictions)
-                        st.success("✅ Tallennettu!")
+            st.markdown(f"🟢 **{countdown}**", unsafe_allow_html=True)
+        
+        st.divider()
+        
+        user_special = predictions.get(user, {}).get("special", {})
+        real_special = real_results.get("special", {})
+        
+        for bet in special_bets:
+            real_val = real_special.get(bet["id"])
+            st.write(f"**{bet['name']}** ({bet.get('points', 6)} pistettä)")
+            
+            if real_val:
+                st.markdown("🔒 **Kohde lukittu**", unsafe_allow_html=True)
+                st.write(f"Toteutunut tulos: **{real_val}**")
                 st.divider()
+                continue
+            
+            col_input, col_button = st.columns([3.5, 1])
+            
+            with col_input:
+                if bet["id"] == "most_goals" or bet["id"] == "most_cards":
+                    value = st.selectbox("Valitse maa", options=countries, 
+                                       key=f"special_{bet['id']}", label_visibility="collapsed")
+                elif bet["id"] == "top_scorer":
+                    value = st.text_input("Pelaajan nimi", key=f"special_{bet['id']}", label_visibility="collapsed")
+                elif bet["id"] == "top_scorer_goals":
+                    value = st.selectbox("Maalimäärä", options=list(range(1, 21)), 
+                                       key=f"special_{bet['id']}", label_visibility="collapsed")
+                elif bet["id"] == "champion":
+                    value = st.selectbox("Valitse maa", options=countries, 
+                                       key=f"special_{bet['id']}", label_visibility="collapsed")
+                elif bet["id"].startswith("group_"):
+                    group_letter = bet["id"].split("_")[1].upper()
+                    group_matches = [m for m in matches if m.get("group") == group_letter]
+                    group_teams = sorted(set([m["home"] for m in group_matches] + [m["away"] for m in group_matches]))
+                    value = st.selectbox("Lohkovoittaja", options=group_teams, 
+                                       key=f"special_{bet['id']}", label_visibility="collapsed")
+                else:
+                    value = st.text_input("Vastaus", key=f"special_{bet['id']}", label_visibility="collapsed")
+            
+            with col_button:
+                if st.button("TALLENNA VEIKKAUS", key=f"save_{bet['id']}", use_container_width=True):
+                    if user not in predictions:
+                        predictions[user] = {"special": {}}
+                    if "special" not in predictions[user]:
+                        predictions[user]["special"] = {}
+                    predictions[user]["special"][bet["id"]] = str(value).strip()
+                    save_json(PREDICTIONS_FILE, predictions)
+                    st.success("Tallennettu!")
+            
+            st.divider()
 
 # ====================== VEIKKAUSTILANNE ======================
 if page == "Veikkaustilanne":
-    st.subheader("🏆 Veikkauskisan tilanne")
+    st.subheader("VEIKKAUSTILANNE")
+    
+    # Lasketaan pisteet
     leaderboard = []
-    for player in users.keys():
+    for user in users.keys():
+        user_pred = predictions.get(user, {})
         total_points = 0
         for m in matches:
-            pred = predictions.get(player, {}).get(str(m['id']))
+            pred = user_pred.get(str(m['id']))
             real = real_results.get("matches", {}).get(str(m['id']))
-            total_points += calculate_match_points(pred, real)
-        user_special = predictions.get(player, {}).get("special", {})
+            if pred and real:
+                total_points += calculate_match_points(pred, real)
+        
+        user_special = user_pred.get("special", {})
         real_special = real_results.get("special", {})
         for bet in special_bets:
-            if bet["id"] in user_special and bet["id"] in real_special:
-                user_ans = str(user_special[bet["id"]]).lower().strip()
-                real_list = [x.strip().lower() for x in str(real_special[bet["id"]]).split(",")]
-                if user_ans in real_list and user_ans:
-                    total_points += bet["points"]
-        leaderboard.append({"Sijoitus": "", "Nimi": player, "Pisteet": total_points})
+            pred_val = user_special.get(bet["id"])
+            real_val = real_special.get(bet["id"])
+            if pred_val and real_val:
+                user_str = str(pred_val).lower().strip()
+                real_list = [x.strip().lower() for x in str(real_val).split(",")]
+                if user_str in real_list:
+                    total_points += bet.get("points", 6)
+        
+        leaderboard.append({"Nimi": user, "Pisteet": total_points})
     
-    if leaderboard:
-        df = pd.DataFrame(leaderboard).sort_values("Pisteet", ascending=False).reset_index(drop=True)
-        df.index = df.index + 1
-        df["Sijoitus"] = df.index
-        column_config = {
-            "Sijoitus": st.column_config.NumberColumn(width=80, alignment="center"),
-            "Nimi": st.column_config.TextColumn(width=200),
-            "Pisteet": st.column_config.NumberColumn(width=100, alignment="center")
-        }
-        st.dataframe(df[["Sijoitus", "Nimi", "Pisteet"]], use_container_width=False, column_config=column_config, hide_index=True)
-    else:
-        st.info("Ei vielä tuloksia")
+    leaderboard.sort(key=lambda x: x["Pisteet"], reverse=True)
+    
+    for i, entry in enumerate(leaderboard):
+        entry["Sija"] = i + 1
+    
+    # Tyylikäs versio ohuilla viivoilla
+    for entry in leaderboard:
+        c1, c2, c3 = st.columns([0.8, 1.2, 1.2])
+        
+        with c1:
+            st.markdown(f"""
+                <div style="text-align: right; font-size: 1.8rem; font-weight: 700; color: #00ff9d; padding-right: 12px;">
+                    {entry["Sija"]}
+                </div>
+            """, unsafe_allow_html=True)
+        
+        with c2:
+            st.markdown(f"""
+                <div style="font-size: 1.8rem; font-weight: 700; color: #e0e0e0;">
+                    {entry["Nimi"]}
+                </div>
+            """, unsafe_allow_html=True)
+        
+        with c3:
+            st.markdown(f"""
+                <div style="text-align: center; background: #2a2a4a; color: #ffff88; 
+                font-weight: 700; font-size: 1.2rem; width: 54px; height: 54px; 
+                border-radius: 50%; display: flex; align-items: center; 
+                justify-content: center; margin: 0 auto; box-shadow: 0 0 12px rgba(255,255,136,0.3);">
+                    {entry["Pisteet"]}
+                </div>
+            """, unsafe_allow_html=True)
+        
+        # Hieno ohut viiva
+        st.markdown("""
+            <div style="height: 1px; background: linear-gradient(to right, transparent, #334466, transparent); 
+            margin: 8px 40px;"></div>
+        """, unsafe_allow_html=True)
 
 # ====================== OMAT VEIKKAUKSET ======================
 if page == "Omat veikkaukset":
@@ -338,99 +536,234 @@ if page == "Omat veikkaukset":
         st.warning("Kirjaudu ensin sisään!")
     else:
         user = st.session_state.logged_in_user
-        st.subheader(f"Omat veikkaukset - {user}")
-        st.write("### Otteluveikkaukset")
-        for m in matches:
-            pred = predictions.get(user, {}).get(str(m['id']))
-            real = real_results.get("matches", {}).get(str(m['id']))
-            st.write(f"**{m['home']} — {m['away']}**")
-            if pred:
-                st.markdown(f'<div class="prediction-box">Veikkaus: {pred[0]}–{pred[1]}</div>', unsafe_allow_html=True)
-            else:
-                st.write("Ei veikkausta")
-            if real:
-                points = calculate_match_points(pred, real)
-                st.markdown(f'<div class="result-box">Tulos: {real[0]}–{real[1]} (+{points} pistettä)</div>', unsafe_allow_html=True)
-            st.divider()
+        st.subheader(f"OMAT VEIKKAUKSET")
+        
+        tab1, tab2 = st.tabs(["Otteluveikkaukset", "Erikoiskohteet"])
+        
+        # ====================== TAB 1: OTTELUVEIKKAUKSET ======================
+        with tab1:
+            
+            for m in matches:
+                pred = predictions.get(user, {}).get(str(m['id']))
+                real = real_results.get("matches", {}).get(str(m['id']))
+                
+                st.write(f"**{m['home']} — {m['away']}**")
+                
+                col1, col2 = st.columns([2.8, 1.2])
+                
+                with col1:
+                    if pred:
+                        st.markdown(f'<div class="pred-box">{pred[0]}–{pred[1]}</div>', unsafe_allow_html=True)
+                    else:
+                        st.markdown('<div class="pred-box">–</div>', unsafe_allow_html=True)
+                    
+                    if real:
+                        st.markdown(f'<div class="result-box">{real[0]}–{real[1]}</div>', unsafe_allow_html=True)
+                    else:
+                        st.markdown('<div class="result-box">–</div>', unsafe_allow_html=True)
+                
+                with col2:
+                    if real and pred:
+                        pts = calculate_match_points(pred, real)
+                        st.markdown(f'<div class="points-box">+{pts}</div>', unsafe_allow_html=True)
+                    elif real:
+                        st.markdown('<div class="points-box">0</div>', unsafe_allow_html=True)
+                    else:
+                        st.markdown('<div class="points-box">–</div>', unsafe_allow_html=True)
+                
+                st.divider()
 
-        st.write("### Erikoiskohteet")
-        user_special = predictions.get(user, {}).get("special", {})
-        real_special = real_results.get("special", {})
-        for bet in special_bets:
-            value = user_special.get(bet["id"], "Ei veikkausta")
-            real_val = real_special.get(bet["id"])
-            st.write(f"**{bet['name']}**")
-            st.markdown(f'<div class="prediction-box">Veikkaus: {value}</div>', unsafe_allow_html=True)
-            if real_val:
-                user_ans = str(value).lower().strip()
-                real_list = [x.strip().lower() for x in str(real_val).split(",")]
-                points = bet["points"] if user_ans in real_list and user_ans else 0
-                st.markdown(f'<div class="result-box">Toteutunut: {real_val} (+{points} pistettä)</div>', unsafe_allow_html=True)
-            st.divider()
+        # ====================== TAB 2: ERIKOISKOHTEET ======================
+        with tab2:
+            
+            user_special = predictions.get(user, {}).get("special", {})
+            real_special = real_results.get("special", {})
+            
+            for bet in special_bets:
+                pred_value = user_special.get(bet["id"], None)
+                real_value = real_special.get(bet["id"])
+                
+                st.write(f"**{bet['name']}**")
+                
+                col1, col2 = st.columns([2.8, 1.2])
+                
+                with col1:
+                    if pred_value:
+                        st.markdown(f'<div class="pred-box">{pred_value}</div>', unsafe_allow_html=True)
+                    else:
+                        st.markdown('<div class="pred-box">–</div>', unsafe_allow_html=True)
+                    
+                    if real_value:
+                        st.markdown(f'<div class="result-box">{real_value}</div>', unsafe_allow_html=True)
+                    else:
+                        st.markdown('<div class="result-box">–</div>', unsafe_allow_html=True)
+                
+                with col2:
+                    if real_value and pred_value:
+                        user_str = str(pred_value).lower().strip()
+                        real_list = [x.strip().lower() for x in str(real_value).split(",")]
+                        pts = bet["points"] if user_str in real_list else 0
+                        st.markdown(f'<div class="points-box">+{pts}</div>', unsafe_allow_html=True)
+                    elif real_value:
+                        st.markdown('<div class="points-box">0</div>', unsafe_allow_html=True)
+                    else:
+                        st.markdown('<div class="points-box">–</div>', unsafe_allow_html=True)
+                
+                st.divider()
 
 # ====================== KAIKKIEN VEIKKAUKSET ======================
 if page == "Kaikkien veikkaukset":
-    st.subheader("📋 Kaikkien osallistujien veikkaukset")
-    if not real_results.get("matches") and not real_results.get("special"):
-        st.info("Admin ei ole vielä syöttänyt tuloksia.")
-    else:
-        st.write("### Ottelut")
-        for m in matches:
-            real = real_results.get("matches", {}).get(str(m['id']))
-            if not real: continue
-            st.write(f"**{m['home']} — {m['away']}**")
-            st.markdown(f'<div class="result-box">Tulos: {real[0]}–{real[1]}</div>', unsafe_allow_html=True)
-            for player in sorted(users.keys()):
-                pred = predictions.get(player, {}).get(str(m['id']))
+    st.subheader("Kaikkien veikkaukset")
+    st.caption("Näkyvissä vain ne ottelut, joihin admin on syöttänyt tuloksen")
+    
+    locked_matches = real_results.get("matches", {})
+    
+    if not locked_matches:
+        st.info("Admin ei ole vielä syöttänyt tuloksia yhteenkään otteluun.")
+        st.stop()
+    
+    found_any = False
+    
+    for m in matches:
+        match_id = str(m['id'])
+        real = locked_matches.get(match_id)
+        
+        # Näytetään vain ne ottelut, joissa on tulos
+        if real:
+            found_any = True
+            
+            st.markdown(f"**{m['home']} — {m['away']}**  ({m.get('group', '')})")
+            st.markdown(f"**Toteutunut tulos:** {real[0]}–{real[1]}")
+            
+            # Pelaajien veikkaukset
+            has_predictions = False
+            for u in users.keys():
+                pred = predictions.get(u, {}).get(match_id)
                 if pred:
-                    points = calculate_match_points(pred, real)
-                    st.write(f"**{player}**: {pred[0]}–{pred[1]} (+{points}p)")
-                else:
-                    st.write(f"**{player}**: ei veikkausta")
+                    has_predictions = True
+                    pts = calculate_match_points(pred, real)
+                    st.markdown(f"**{u}**: {pred[0]}–{pred[1]}  <span style='color:#00ff9d'>(+{pts} pistettä)</span>", unsafe_allow_html=True)
+            
+            if not has_predictions:
+                st.caption("Ei veikkauksia tähän otteluun.")
+            
             st.divider()
-
-        st.write("### Erikoiskohteet")
-        real_special = real_results.get("special", {})
-        for bet in special_bets:
-            real_val = real_special.get(bet["id"])
-            if not real_val: continue
-            st.write(f"**{bet['name']}**")
-            st.markdown(f'<div class="result-box">Toteutunut: {real_val}</div>', unsafe_allow_html=True)
-            for player in sorted(users.keys()):
-                value = predictions.get(player, {}).get("special", {}).get(bet["id"], "Ei veikkausta")
-                user_ans = str(value).lower().strip()
-                real_list = [x.strip().lower() for x in str(real_val).split(",")]
-                points = bet["points"] if user_ans in real_list and user_ans else 0
-                st.write(f"**{player}**: {value} (+{points}p)")
-            st.divider()
+    
+    if not found_any:
+        st.info("Ei vielä yhtään lukittua ottelua.")
 
 # ====================== ADMIN ======================
 if page == "Admin":
-    pw = st.text_input("Admin-salasana", type="password")
-    if pw == "admin123":
-        st.success("✅ Admin auki")
-        tab1, tab2 = st.tabs(["Ottelutulokset", "Erikoiskohteet"])
-        with tab1:
-            for m in matches:
-                st.write(f"{m['home']} — {m['away']}")
-                c1, c2 = st.columns(2)
-                with c1: h = st.number_input("Koti", min_value=0, key=f"rh_{m['id']}")
-                with c2: a = st.number_input("Vieras", min_value=0, key=f"ra_{m['id']}")
-                if st.button("Tallenna tulos", key=f"save_match_{m['id']}"):
+    st.subheader("🛠️ Admin-paneeli")
+    
+    # Admin-salasana (muuta tätä halutessasi)
+    ADMIN_PASSWORD = "admin123"   # <--- VAIHDA TÄHÄN OMA SALASANASI
+    
+    if not st.session_state.get("is_admin", False):
+        pw = st.text_input("Syötä admin-salasana", type="password", key="admin_pw_input")
+        if st.button("Avaa Admin-paneeli"):
+            if pw == ADMIN_PASSWORD:
+                st.session_state.is_admin = True
+                st.success("Admin-oikeudet myönnetty!")
+                st.rerun()
+            else:
+                st.error("Väärä salasana")
+        st.stop()  # Pysäytetään täällä jos ei ole admin
+    
+    # ====================== ADMIN ======================
+if page == "Admin":
+    st.subheader("🛠️ Admin-paneeli")
+    
+    ADMIN_PASSWORD = "admin123"   # <--- VAIHDA TÄHÄN OMA SALASANASI
+    
+    if not st.session_state.get("is_admin", False):
+        pw = st.text_input("Syötä admin-salasana", type="password", key="admin_pw")
+        if st.button("Kirjaudu adminiksi"):
+            if pw == ADMIN_PASSWORD:
+                st.session_state.is_admin = True
+                st.success("✅ Admin-oikeudet myönnetty")
+                st.rerun()
+            else:
+                st.error("Väärä salasana")
+        st.stop()
+    
+    st.success("✅ Olet admin-tilassa")
+    
+    admin_choice = st.sidebar.selectbox(
+        "Valitse toiminto",
+        ["Lisää ottelun tulos", "Lisää erikoiskohteen tulos", "Hallinnoi käyttäjiä"]
+    )
+    
+    if admin_choice == "Lisää ottelun tulos":
+        st.write("### Ottelujen tulosten syöttö / muokkaus")
+        
+        for m in matches:
+            match_id = str(m['id'])
+            real = real_results.get("matches", {}).get(match_id)
+            
+            col1, col2, col3, col4 = st.columns([3, 1.5, 1.5, 1])
+            with col1:
+                st.write(f"**{m['home']} — {m['away']}**")
+            with col2:
+                h = st.number_input("Koti", 0, 20, value=real[0] if real else 0, key=f"h{match_id}")
+            with col3:
+                a = st.number_input("Vieras", 0, 20, value=real[1] if real else 0, key=f"a{match_id}")
+            with col4:
+                if st.button("Tallenna", key=f"save{match_id}"):
                     if "matches" not in real_results:
                         real_results["matches"] = {}
-                    real_results["matches"][str(m['id'])] = (h, a)
-                    save_json(RESULTS_FILE, real_results)
-                st.divider()
-        with tab2:
-            for bet in special_bets:
-                st.write(f"**{bet['name']}**")
-                val = st.text_input("Hyväksytyt vastaukset (pilkulla eroteltuna)", key=f"admin_{bet['id']}")
-                if st.button("Tallenna", key=f"save_admin_{bet['id']}"):
+                    real_results["matches"][match_id] = [h, a]
+                    save_json("real_results.json", real_results)
+                    st.success(f"✅ Tallennettu: {m['home']} {h}–{a} {m['away']}")
+                    st.rerun()
+                
+                if real and st.button("🗑️ Poista tulos", key=f"del{match_id}"):
+                    real_results["matches"].pop(match_id, None)
+                    save_json("real_results.json", real_results)
+                    st.success("Tulos poistettu – kohde avattu uudelleen")
+                    st.rerun()
+    
+    elif admin_choice == "Lisää erikoiskohteen tulos":
+        st.write("### Erikoiskohteiden tulosten syöttö")
+        for bet in special_bets:
+            bet_id = bet["id"]
+            real_val = real_results.get("special", {}).get(bet_id)
+            question = bet.get('question') or bet.get('text', bet_id)
+            
+            st.write(f"**{question}**")
+            new_val = st.text_input("Oikea vastaus", value=real_val or "", key=f"e{bet_id}")
+            
+            col1, col2 = st.columns([1,1])
+            with col1:
+                if st.button("Tallenna", key=f"save{bet_id}"):
                     if "special" not in real_results:
                         real_results["special"] = {}
-                    real_results["special"][bet["id"]] = val
-                    save_json(RESULTS_FILE, real_results)
-    elif pw:
-        st.error("Väärä admin-salasana")
-
+                    real_results["special"][bet_id] = new_val.strip()
+                    save_json("real_results.json", real_results)
+                    st.success("✅ Tallennus onnistui!")
+                    st.rerun()
+            with col2:
+                if real_val and st.button("Poista tulos", key=f"del_spec{bet_id}"):
+                    real_results["special"].pop(bet_id, None)
+                    save_json("real_results.json", real_results)
+                    st.success("Tulos poistettu")
+                    st.rerun()
+    
+    elif admin_choice == "Hallinnoi käyttäjiä":
+        # (sama kuin aiemmin)
+        st.write("### 👥 Hallinnoi käyttäjiä")
+        if not users:
+            st.info("Ei käyttäjiä")
+        else:
+            for user in list(users.keys()):
+                col1, col2 = st.columns([4,1])
+                with col1:
+                    st.write(f"**{user}**")
+                with col2:
+                    if st.button("Poista", key=f"del_user{user}"):
+                        users.pop(user, None)
+                        predictions.pop(user, None)
+                        save_json("users.json", users)
+                        save_json("predictions.json", predictions)
+                        st.success(f"{user} poistettu")
+                        st.rerun()
